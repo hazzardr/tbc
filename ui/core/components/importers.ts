@@ -278,6 +278,7 @@ class IndividualAddonImporter<SpecType extends Spec> extends Importer {
 
 		const gearJson = importJson['gear'];
 		gearJson.items = (gearJson.items as Array<any>).filter(item => item != null);
+		delete gearJson.version;
 		const equipmentSpec = EquipmentSpec.fromJson(gearJson);
 
 		this.finishIndividualImport(this.simUI, charClass, race, equipmentSpec, talentsStr);

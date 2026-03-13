@@ -146,6 +146,10 @@ devserver: sim/web/main.go binary_dist/dist.go
 rundevserver: devserver
 	./wowsimtbc --usefs=true --launch=false
 
+.PHONY: tui
+tui:
+	go build -o ./binary_dist/wowsimtbc-tui ./sim/tui/main.go
+
 release: wowsimtbc
 	GOOS=windows GOARCH=amd64 go build -o wowsimtbc-windows.exe -ldflags="-X 'main.Version=$(VERSION)'" ./sim/web/main.go
 	GOOS=darwin GOARCH=amd64 go build -o wowsimtbc-amd64-darwin -ldflags="-X 'main.Version=$(VERSION)'" ./sim/web/main.go

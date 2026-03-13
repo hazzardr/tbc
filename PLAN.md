@@ -1,5 +1,15 @@
 # TUI Layer — Feasibility & Implementation Plan
 
+## Status
+
+**Phase 0 (Foundation) — COMPLETE** ✅
+- Added `bubbletea` v2.0.2 to `go.mod`
+- Created `sim/tui/main.go` with minimal working TUI
+- Calls `sim.RegisterAll()` to bootstrap all specs
+- Runs Balance Druid P1 preset (Adaptive rotation) with `core.RunRaidSim()`
+- Displays avg DPS on completion
+- Added `make tui` build target (outputs `bin/wowsimtbc-tui`)
+
 ## Summary
 
 Adding a TUI layer is highly feasible. The sim engine is already cleanly separated from its delivery mechanisms. The core API (`sim/core/api.go`) exposes plain Go functions that take and return protobuf structs — the web server is just a thin HTTP wrapper around them. A TUI would be an equally thin wrapper: a new `sim/tui/` package that imports `sim/core` directly, with no WASM or HTTP involved.
@@ -42,37 +52,52 @@ No C dependencies; trivially added to `go.mod`.
 
 ## Scope Breakdown
 
-| Component | Effort | Notes |
-|---|---|---|
-| Skeleton `sim/tui/main.go` | Trivial | `sim.RegisterAll()` + call `core.RunRaidSim` with a preset, print DPS |
-| Spec/gear preset picker | Small | List of specs, list of named gear sets per spec |
-| Rotation/options picker | Small | Per-spec rotation options already defined in presets |
-| Buffs & debuffs configuration | Small | Toggle list |
-| Encounter configuration | Small | Duration, num targets, health-based option |
-| Progress bar during sim | Small | Read from `ProgressMetrics` channel |
-| Results display (DPS table, spell breakdown) | Small–Medium | Tabular output with per-spell metrics |
-| Full interactive gear picker | Large | Hundreds of items per slot; needs fuzzy search |
-| Talent picker | Medium | Tree UI is non-trivial; could start with preset-only |
+| Component | Effort | Status | Notes |
+|---|---|---|---|
+| Skeleton `sim/tui/main.go` | Trivial | ✅ DONE | `sim.RegisterAll()` + call `core.RunRaidSim` with a Balance Druid P1 preset, display avg DPS |
+| `make tui` build target | Trivial | ✅ DONE | Outputs `bin/wowsimtbc-tui` |
+| Spec/gear preset picker | Small | ⏳ TODO | List of specs, list of named gear sets per spec |
+| Rotation/options picker | Small | ⏳ TODO | Per-spec rotation options already defined in presets |
+| Buffs & debuffs configuration | Small | ⏳ TODO | Toggle list |
+| Encounter configuration | Small | ⏳ TODO | Duration, num targets, health-based option |
+| Progress bar during sim | Small | ⏳ TODO | Read from `ProgressMetrics` channel, display spinner/progress |
+| Results display (DPS table, spell breakdown) | Small–Medium | ⏳ TODO | Tabular output with per-spell metrics |
+| Full interactive gear picker | Large | ⏳ TODO | Hundreds of items per slot; needs fuzzy search |
+| Talent picker | Medium | ⏳ TODO | Tree UI is non-trivial; could start with preset-only |
 
 ## Recommended Phased Approach
 
-### Phase 1 — Preset Runner (1–2 days)
+### Phase 0 — Foundation (Baseline Working TUI) ✅ COMPLETE
+- Created minimal TUI that runs one hardcoded preset (Balance Druid P1)
+- Calls `sim.RegisterAll()` and `core.RunRaidSim()`
+- Shows DPS result in terminal
+- Builds with `make tui`
+
+### Phase 1 — Preset Runner (1–2 days) ⏳ NEXT
 A minimal TUI that:
-- Lists available specs
+- Lists available specs (bubbletea list view)
 - For the selected spec, lists preset gear sets and rotation options
 - Lets the user configure buffs, debuffs, and encounter duration
-- Runs the sim with a progress bar
+- Runs the sim with a progress bar (async mode with `RunRaidSimAsync`)
 - Displays a results table (DPS, top spells by damage, hit/crit/miss)
 
 This is entirely self-contained in a new `sim/tui/` package and requires no changes to existing code.
 
-### Phase 2 — Customization (1 week)
+**Next steps:**
+1. Refactor `main.go` into `main.go` (entry point) and `model.go` (top-level app model)
+2. Implement spec selection screen (`specs.go`)
+3. Implement preset selection screen (`presets.go`)
+4. Implement encounter/buff config screen (`config.go`)
+5. Implement sim runner with async progress (`runner.go`)
+6. Implement results display (`results.go`)
+
+### Phase 2 — Customization (1 week) ⏳ TODO
 - Editable encounter settings (target count, duration, health-based)
 - Buff/debuff toggles
 - Consumables picker
 - Export/import of configurations as JSON (the proto already supports this)
 
-### Phase 3 — Full Gear & Talent Picker (1–2 weeks)
+### Phase 3 — Full Gear & Talent Picker (1–2 weeks) ⏳ TODO
 - Searchable item list per slot (backed by `core.GetGearList()`)
 - Gem and enchant selection
 - Talent point allocation UI
@@ -99,9 +124,12 @@ sim/tui/
 
 ## Build Integration
 
-Add a new makefile target:
+✅ Makefile target implemented:
 
 ```makefile
+.PHONY: tui
 tui:
-    go build -o wowsimtbc-tui ./sim/tui/main.go
+    go build -o bin/wowsimtbc-tui ./sim/tui/main.go
 ```
+
+Run with: `make tui` → produces `bin/wowsimtbc-tui`
